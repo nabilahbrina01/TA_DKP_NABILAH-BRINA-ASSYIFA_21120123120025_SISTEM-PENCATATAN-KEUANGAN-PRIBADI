@@ -1,0 +1,388 @@
+import tkinter as tk
+from tkinter import messagebox, ttk
+from tkcalendar import DateEntry
+import datetime
+from PIL import Image, ImageTk
+
+class BudgetBuddyApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("BudgetBuddy")
+        self.root.geometry("400x600")
+        self.root.configure(bg='#003366')  # Warna biru tua
+        self.account_name = ""
+        self.initial_amount = 0.0
+        self.balance = 0.0
+        self.transactions = []
+
+        self.create_widgets()
+
+    def create_widgets(self):
+        # Membuat label judul
+        self.title_label = tk.Label(self.root, text="WELCOME TO", font=("Arial", 26), bg='#003366', fg='white')
+        self.title_label.pack(pady=(10, 0))  # Mengatur jarak antara title dan slogan
+
+        # Membuat label slogan dengan ukuran font lebih kecil
+        self.slogan_label = tk.Label(self.root, text="Anggaran Mudah, Hidup Terarah", font=("Arial", 10), bg='#003366', fg='white')
+        self.slogan_label.pack(pady=0)
+
+        # Membuat label tambahan
+        self.info_label = tk.Label(self.root, text="Track Your Income and Expenses Effortlessly", font=("Arial", 10), bg='#003366', fg='white')
+        self.info_label.pack(pady=(2, 20))  # Mengatur jarak antara slogan dan tombol Continue
+
+        # Membuat tombol Continue
+        self.continue_button = tk.Button(self.root, text="Continue", command=self.open_account_setup)
+        self.continue_button.pack(pady=10)
+
+    def open_account_setup(self):
+        # Menghapus widget sebelumnya
+        self.title_label.pack_forget()
+        self.slogan_label.pack_forget()
+        self.info_label.pack_forget()
+        self.continue_button.pack_forget()
+
+        # Membuat widget baru untuk setup akun
+        self.add_account_label = tk.Label(self.root, text="Add Account", font=("Arial", 18), bg='#003366', fg='white')
+        self.add_account_label.pack(pady=(20, 5))
+
+        self.choose_name_label = tk.Label(self.root, text="Choose A Name For Your Account", font=("Arial", 12), bg='#003366', fg='white')
+        self.choose_name_label.pack(pady=5)
+
+        self.account_name_entry = tk.Entry(self.root)
+        self.account_name_entry.pack(pady=5)
+
+        self.next_button = tk.Button(self.root, text="Next", command=self.open_initial_amount)
+        self.next_button.pack(pady=20)
+
+    def open_initial_amount(self):
+        # Menghapus widget sebelumnya
+        self.add_account_label.pack_forget()
+        self.choose_name_label.pack_forget()
+        self.account_name_entry.pack_forget()
+        self.next_button.pack_forget()
+
+        # Simpan nama akun
+        self.account_name = self.account_name_entry.get()
+
+        # Membuat widget baru untuk jumlah uang awal
+        self.initial_amount_label = tk.Label(self.root, text="INITIAL AMOUNT", font=("Arial", 18), bg='#003366', fg='white')
+        self.initial_amount_label.pack(pady=(20, 5))
+
+        self.cash_wallet_label = tk.Label(self.root, text="How much money do you have in your cash wallet?", font=("Arial", 12), bg='#003366', fg='white')
+        self.cash_wallet_label.pack(pady=5)
+
+        self.amount_entry = tk.Entry(self.root)
+        self.amount_entry.pack(pady=5)
+
+        self.done_button = tk.Button(self.root, text="Done", command=self.initial_amount_submitted)
+        self.done_button.pack(pady=5)
+
+        self.skip_button = tk.Button(self.root, text="Skip", command=self.skip_initial_amount)
+        self.skip_button.pack(pady=5)
+
+    def initial_amount_submitted(self):
+        amount = self.amount_entry.get()
+        try:
+            self.initial_amount = float(amount.replace(',', ''))
+            self.balance = self.initial_amount
+            messagebox.showinfo("Initial Amount", f"You have entered Rp {self.initial_amount:,.2f} as your initial amount.")
+            self.open_main_menu()
+        except ValueError:
+            messagebox.showerror("Input Error", "Please enter a valid amount.")
+
+    def skip_initial_amount(self):
+        messagebox.showinfo("Initial Amount", "You have chosen to skip entering initial amount.")
+        self.open_main_menu()
+
+    def open_main_menu(self):
+        # Menghapus widget sebelumnya
+        self.initial_amount_label.pack_forget()
+        self.cash_wallet_label.pack_forget()
+        self.amount_entry.pack_forget()
+        self.done_button.pack_forget()
+        self.skip_button.pack_forget()
+
+        # Menampilkan nama akun dan jumlah uang di bagian atas
+        self.account_info_label = tk.Label(self.root, text=f"Account: {self.account_name}\nBalance: Rp {self.balance:,.2f}", font=("Arial", 14), bg='#003366', fg='white')
+        self.account_info_label.pack(pady=(10, 20))
+
+        # Membuat Tabbed interface untuk fitur Transaction dan Statistic
+        self.tab_control = ttk.Notebook(self.root)
+
+        self.transaction_tab = ttk.Frame(self.tab_control)
+        self.statistic_tab = ttk.Frame(self.tab_control)
+
+        self.tab_control.add(self.transaction_tab, text="Transaction")
+        self.tab_control.add(self.statistic_tab, text="Statistic")
+
+        self.tab_control.pack(expand=1, fill='both')
+
+        # Membuat widget untuk tab Transaction
+        self.create_transaction_tab()
+
+        # Membuat widget untuk tab Statistic
+        self.create_statistic_tab()
+
+    def create_transaction_tab(self):
+        self.transaction_label = tk.Label(self.transaction_tab, text="Transaction", font=("Arial", 18))
+        self.transaction_label.pack(pady=(20, 5))
+
+        # Membuat tombol tambah (+)
+        self.add_button = tk.Button(self.transaction_tab, text="+", font=("Arial", 12), bg='yellow', command=self.open_transaction_options)
+        self.add_button.pack(pady=5)
+
+    def create_statistic_tab(self):
+        self.statistic_label = tk.Label(self.statistic_tab, text="Transaction History", font=("Arial", 18))
+        self.statistic_label.pack(pady=(20, 5))
+
+        self.period_label = tk.Label(self.statistic_tab, text="Select Period:", font=("Arial", 12))
+        self.period_label.pack(pady=5)
+
+        self.period_var = tk.StringVar(self.root)
+        self.period_var.set("Weekly")  # Set default value
+
+        periods = ["Weekly", "Monthly", "Yearly"]
+        self.period_option = tk.OptionMenu(self.statistic_tab, self.period_var, *periods, command=self.update_transaction_history)
+        self.period_option.pack(pady=5)
+
+        self.transaction_history_text = tk.Text(self.statistic_tab, height=15, width=40)
+        self.transaction_history_text.pack(pady=10)
+
+    def open_transaction_options(self):
+        # Membuat widget baru untuk pilihan Transaction
+        self.income_button = tk.Button(self.transaction_tab, text="Income", font=("Arial", 12), command=self.open_income_input)
+        self.income_button.pack(pady=5)
+
+        self.expense_button = tk.Button(self.transaction_tab, text="Expense", font=("Arial", 12), command=self.open_expense_input)
+        self.expense_button.pack(pady=5)
+
+        self.transfer_button = tk.Button(self.transaction_tab, text="Transfer", font=("Arial", 12), command=self.open_transfer_input)
+        self.transfer_button.pack(pady=5)
+
+    def open_income_input(self):
+        # Menghapus widget sebelumnya
+        self.clear_transaction_options()
+
+        # Membuat widget baru untuk input Income
+        self.income_label = tk.Label(self.transaction_tab, text="Income", font=("Arial", 18))
+        self.income_label.pack(pady=(20, 5))
+
+        self.date_label = tk.Label(self.transaction_tab, text="Date:", font=("Arial", 12))
+        self.date_label.pack(pady=5)
+
+        self.date_entry = DateEntry(self.transaction_tab, width=12, background='darkblue', foreground='white', borderwidth=2)
+        self.date_entry.pack()
+
+        self.amount_label = tk.Label(self.transaction_tab, text="Amount:", font=("Arial", 12))
+        self.amount_label.pack(pady=5)
+
+        self.amount_entry = tk.Entry(self.transaction_tab)
+        self.amount_entry.pack()
+
+        self.description_label = tk.Label(self.transaction_tab, text="Description:", font=("Arial", 12))
+        self.description_label.pack(pady=5)
+
+        self.description_entry = tk.Entry(self.transaction_tab)
+        self.description_entry.pack()
+
+        self.category_label = tk.Label(self.transaction_tab, text="Category:", font=("Arial", 12))
+        self.category_label.pack(pady=5)
+
+        categories = ["Bonus", "Salary", "Award", "Investment", "Dividend", "Other"]
+        self.category_var = tk.StringVar(self.root)
+        self.category_var.set(categories[0])  # Set default value
+        self.category_option = tk.OptionMenu(self.transaction_tab, self.category_var, *categories)
+        self.category_option.pack()
+
+        self.memo_label = tk.Label(self.transaction_tab, text="Memo:", font=("Arial", 12))
+        self.memo_label.pack(pady=5)
+
+        self.memo_entry = tk.Entry(self.transaction_tab)
+        self.memo_entry.pack()
+
+        self.submit_button = tk.Button(self.transaction_tab, text="Submit", font=("Arial", 12), command=self.income_submitted)
+        self.submit_button.pack(pady=10)
+
+    def open_expense_input(self):
+        # Menghapus widget sebelumnya
+        self.clear_transaction_options()
+
+        # Membuat widget baru untuk input Expense
+        self.expense_label = tk.Label(self.transaction_tab, text="Expense", font=("Arial", 18))
+        self.expense_label.pack(pady=(20, 5))
+
+        self.date_label = tk.Label(self.transaction_tab, text="Date:", font=("Arial", 12))
+        self.date_label.pack(pady=5)
+
+        self.date_entry = DateEntry(self.transaction_tab, width=12, background='darkblue', foreground='white', borderwidth=2)
+        self.date_entry.pack()
+
+        self.amount_label = tk.Label(self.transaction_tab, text="Amount:", font=("Arial", 12))
+        self.amount_label.pack(pady=5)
+
+        self.amount_entry = tk.Entry(self.transaction_tab)
+        self.amount_entry.pack()
+
+        self.description_label = tk.Label(self.transaction_tab, text="Description:", font=("Arial", 12))
+        self.description_label.pack(pady=5)
+
+        self.description_entry = tk.Entry(self.transaction_tab)
+        self.description_entry.pack()
+
+        self.category_label = tk.Label(self.transaction_tab, text="Category:", font=("Arial", 12))
+        self.category_label.pack(pady=5)
+
+        categories = ["Bills", "Education", "Entertainment", "Fitness", "Food", "Health", "Furniture", "Other"]
+        self.category_var = tk.StringVar(self.root)
+        self.category_var.set(categories[0])  # Set default value
+        self.category_option = tk.OptionMenu(self.transaction_tab, self.category_var, *categories)
+        self.category_option.pack()
+
+        self.memo_label = tk.Label(self.transaction_tab, text="Memo:", font=("Arial", 12))
+        self.memo_label.pack(pady=5)
+
+        self.memo_entry = tk.Entry(self.transaction_tab)
+        self.memo_entry.pack()
+
+        self.submit_button = tk.Button(self.transaction_tab, text="Submit", font=("Arial", 12), command=self.expense_submitted)
+        self.submit_button.pack(pady=10)
+
+    def open_transfer_input(self):
+        # Menghapus widget sebelumnya
+        self.clear_transaction_options()
+
+        # Membuat widget baru untuk input Transfer
+        self.transfer_label = tk.Label(self.transaction_tab, text="Transfer", font=("Arial", 18))
+        self.transfer_label.pack(pady=(20, 5))
+
+        self.date_label = tk.Label(self.transaction_tab, text="Date:", font=("Arial", 12))
+        self.date_label.pack(pady=5)
+
+        self.date_entry = DateEntry(self.transaction_tab, width=12, background='darkblue', foreground='white', borderwidth=2)
+        self.date_entry.pack()
+
+        self.amount_label = tk.Label(self.transaction_tab, text="Amount:", font=("Arial", 12))
+        self.amount_label.pack(pady=5)
+
+        self.amount_entry = tk.Entry(self.transaction_tab)
+        self.amount_entry.pack()
+
+        self.description_label = tk.Label(self.transaction_tab, text="Description:", font=("Arial", 12))
+        self.description_label.pack(pady=5)
+
+        self.description_entry = tk.Entry(self.transaction_tab)
+        self.description_entry.pack()
+
+        self.fee_label = tk.Label(self.transaction_tab, text="Fee:", font=("Arial", 12))
+        self.fee_label.pack(pady=5)
+
+        self.fee_entry = tk.Entry(self.transaction_tab)
+        self.fee_entry.pack()
+
+        self.memo_label = tk.Label(self.transaction_tab, text="Memo:", font=("Arial", 12))
+        self.memo_label.pack(pady=5)
+
+        self.memo_entry = tk.Entry(self.transaction_tab)
+        self.memo_entry.pack()
+
+        self.submit_button = tk.Button(self.transaction_tab, text="Submit", font=("Arial", 12), command=self.transfer_submitted)
+        self.submit_button.pack(pady=10)
+
+    def income_submitted(self):
+        # Simpan detail Income dan update saldo
+        date = self.date_entry.get()
+        amount_str = self.amount_entry.get().replace(',', '')
+        description = self.description_entry.get()
+        category = self.category_var.get()
+        memo = self.memo_entry.get()
+
+        try:
+            amount = float(amount_str)
+            self.balance += amount
+            self.transactions.append({"type": "Income", "date": date, "amount": amount, "description": description, "category": category, "memo": memo})
+            self.update_account_info()
+            messagebox.showinfo("Income Submitted", f"Income details:\nDate: {date}\nAmount: Rp {amount:,.2f}\nDescription: {description}\nCategory: {category}\nMemo: {memo}")
+            self.return_to_main()
+        except ValueError:
+            messagebox.showerror("Input Error", "Please enter a valid amount.")
+
+    def expense_submitted(self):
+        # Simpan detail Expense dan update saldo
+        date = self.date_entry.get()
+        amount_str = self.amount_entry.get().replace(',', '')
+        description = self.description_entry.get()
+        category = self.category_var.get()
+        memo = self.memo_entry.get()
+
+        try:
+            amount = float(amount_str)
+            self.balance -= amount
+            self.transactions.append({"type": "Expense", "date": date, "amount": amount, "description": description, "category": category, "memo": memo})
+            self.update_account_info()
+            messagebox.showinfo("Expense Submitted", f"Expense details:\nDate: {date}\nAmount: Rp {amount:,.2f}\nDescription: {description}\nCategory: {category}\nMemo: {memo}")
+            self.return_to_main()
+        except ValueError:
+            messagebox.showerror("Input Error", "Please enter a valid amount.")
+
+    def transfer_submitted(self):
+        # Simpan detail Transfer dan update saldo
+        date = self.date_entry.get()
+        amount_str = self.amount_entry.get().replace(',', '')
+        description = self.description_entry.get()
+        fee_str = self.fee_entry.get().replace(',', '')
+        memo = self.memo_entry.get()
+
+        try:
+            amount = float(amount_str)
+            fee = float(fee_str)
+            self.balance -= (amount + fee)
+            self.transactions.append({"type": "Transfer", "date": date, "amount": amount, "description": description, "fee": fee, "memo": memo})
+            self.update_account_info()
+            messagebox.showinfo("Transfer Submitted", f"Transfer details:\nDate: {date}\nAmount: Rp {amount:,.2f}\nDescription: {description}\nFee: Rp {fee:,.2f}\nMemo: {memo}")
+            self.return_to_main()
+        except ValueError:
+            messagebox.showerror("Input Error", "Please enter a valid amount.")
+
+    def update_account_info(self):
+        self.account_info_label.config(text=f"Account: {self.account_name}\nBalance: Rp {self.balance:,.2f}")
+
+    def return_to_main(self):
+        # Menghapus widget transaksi
+        for widget in self.transaction_tab.winfo_children():
+            widget.pack_forget()
+        
+        self.create_transaction_tab()
+
+    def clear_transaction_options(self):
+        # Menghapus widget transaksi pilihan
+        self.income_button.pack_forget()
+        self.expense_button.pack_forget()
+        self.transfer_button.pack_forget()
+
+    def update_transaction_history(self, period):
+        self.transaction_history_text.delete(1.0, tk.END)
+
+        now = datetime.datetime.now()
+        filtered_transactions = []
+
+        if period == "Weekly":
+            one_week_ago = now - datetime.timedelta(weeks=1)
+            filtered_transactions = [t for t in self.transactions if datetime.datetime.strptime(t['date'], "%m/%d/%y") >= one_week_ago]
+        elif period == "Monthly":
+            one_month_ago = now - datetime.timedelta(days=30)
+            filtered_transactions = [t for t in self.transactions if datetime.datetime.strptime(t['date'], "%m/%d/%y") >= one_month_ago]
+        elif period == "Yearly":
+            one_year_ago = now - datetime.timedelta(days=365)
+            filtered_transactions = [t for t in self.transactions if datetime.datetime.strptime(t['date'], "%m/%d/%y") >= one_year_ago]
+
+        for transaction in filtered_transactions:
+            self.transaction_history_text.insert(tk.END, f"{transaction['type']}: {transaction['date']} - Rp {transaction['amount']:,.2f}\nDescription: {transaction['description']}\n")
+            if transaction['type'] == "Transfer":
+                self.transaction_history_text.insert(tk.END, f"Fee: Rp {transaction['fee']:,.2f}\n")
+            self.transaction_history_text.insert(tk.END, f"Category: {transaction['category']}\nMemo: {transaction['memo']}\n\n")
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = BudgetBuddyApp(root)
+    root.mainloop()
+
